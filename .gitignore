@@ -1,0 +1,9 @@
+node_modules/
+.eslintcache
+.idea
+lib/
+.DS_Store
+coverage
+firebase-debug.log
+.firebaserc
+src/playground.*

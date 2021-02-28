@@ -1,0 +1,55 @@
+{
+  "name": "bq-expoter",
+  "version": "0.0.0",
+  "description": "",
+  "author": "mashi-mashi <mashi.07.st@gmail.com>",
+  "main": "lib/index.js",
+  "types": "dist/index.d.ts",
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  },
+  "scripts": {
+    "build": "tsc",
+    "buildWatch": "tsc --watch",
+    "fixpack": "fixpack",
+    "lint": "eslint --ext .ts ./src --cache",
+    "lintfix": "eslint --ext .ts ./src --cache --fix",
+    "test": "npx jest"
+  },
+  "files": [
+    "lib"
+  ],
+  "license": "ISC",
+  "dependencies": {
+    "@mashi-mashi/firebase-wapper": "0.1.1",
+    "@google-cloud/bigquery": "^5.5.0",
+    "@types/js-yaml": "^4.0.0",
+    "@types/uuid": "^8.0.0",
+    "axios": "^0.21.1",
+    "cors": "^2.8.5",
+    "cycle": "^1.0.3",
+    "firebase-functions": "^3.13.1",
+    "googleapis": "^67.0.0",
+    "js-yaml": "^4.0.0",
+    "uuid": "^8.1.0"
+  },
+  "engines": {
+    "node": "12"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.9",
+    "@types/jest": "^26.0.3",
+    "@typescript-eslint/eslint-plugin": "^3.5.0",
+    "@typescript-eslint/parser": "^3.5.0",
+    "eslint": "^7.3.1",
+    "eslint-config-prettier": "^6.11.0",
+    "eslint-plugin-prettier": "^3.1.4",
+    "fixpack": "^3.0.6",
+    "husky": "^4.2.5",
+    "hygen": "^6.0.4",
+    "prettier": "^2.0.5",
+    "pretty-quick": "^2.0.1",
+    "ts-jest": "^26.1.1",
+    "typescript": "^3.9.5"
+  }
+}
