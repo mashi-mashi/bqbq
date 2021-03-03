@@ -5,19 +5,17 @@ const logger = Logger.create('[GcpBigQuery]');
 
 const MAXIMUM_EXECUTION_AMOUNT_YEN = 5;
 
-export class BigQueryHelper {
+export class BigQueryApi {
   private client: BigQuery;
-  constructor({
-    projectId,
-    creadentials,
-  }: {
-    projectId: string;
-    creadentials?: {private_key: string; client_email: string};
-  }) {
-    this.client = new BigQuery({
-      projectId: projectId,
-      credentials: creadentials,
-    });
+  constructor(credentials?: {projectId: string; private_key: string; client_email: string}) {
+    this.client = new BigQuery(
+      credentials
+        ? {
+            projectId: credentials?.projectId,
+            credentials,
+          }
+        : undefined
+    );
   }
 
   /**
@@ -25,7 +23,7 @@ export class BigQueryHelper {
    * @param sql
    * @param params
    */
-  public executeQuery = async <T extends {id?: string}>(sql: string, params?: {[param: string]: any}): Promise<T[]> => {
+  public executeQuery = async <T>(sql: string, params?: {[param: string]: any}): Promise<T[]> => {
     const [, res] = await this.client.createQueryJob({query: sql, dryRun: true});
     const yen = this.billedAsYen(res.statistics?.totalBytesProcessed);
     logger.log('見積もり(円):', yen);
