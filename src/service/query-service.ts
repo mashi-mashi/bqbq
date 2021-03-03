@@ -2,6 +2,7 @@ import {Logger} from '@mashi-mashi/fff/lib';
 import * as fs from 'fs';
 import * as yaml from 'js-yaml';
 import {BigQueryApi} from '../infrastructures/bigquery-api';
+import {PubsubApi} from '../infrastructures/pubsub-api';
 
 const DIR_NAME = './templates/';
 
@@ -9,13 +10,16 @@ const logger = Logger.create('[QueryExporterService]');
 
 export class QueryService {
   private bq: BigQueryApi;
-  private constructor({bq}: {bq: BigQueryApi}) {
+  private pubsub: PubsubApi;
+  private constructor({bq, pubsub}: {bq: BigQueryApi; pubsub: PubsubApi}) {
     this.bq = bq;
+    this.pubsub = pubsub;
   }
 
   public static initialize = async (credentials?: {projectId: string; private_key: string; client_email: string}) => {
     return new QueryService({
       bq: new BigQueryApi(credentials),
+      pubsub: new PubsubApi(),
     });
   };
 
@@ -30,13 +34,16 @@ export class QueryService {
           const {sql, spreadsheetId, sheetId, skip, description} = readYaml;
 
           if (!sql || !spreadsheetId || !sheetId || skip) return;
-
-          const values = await this.bq.executeQuery(sql);
-
-          if (values?.length) {
-            logger.log(`start exporting to GSS, ${spreadsheetId + ':' + sheetId}`);
-            logger.log(`finish exporting to GSS, ${spreadsheetId + ':' + sheetId}`);
-          }
+          await this.pubsub.publishJSON({
+            topicName: 'import-bigquery-values',
+            json: {
+              sql,
+              spreadsheetId,
+              sheetId,
+              skip,
+              description,
+            },
+          });
         } catch (e) {
           logger.error('Failed to export sheet', e?.message);
         }

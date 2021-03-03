@@ -13,7 +13,8 @@
     "lintfix": "eslint --ext .ts ./src --cache --fix",
     "test": "npx jest",
     "deploy:scheduledQuery": "tsc && firebase deploy --only functions:scheduledQuery",
-    "deploy:importer": "tsc && firebase deploy --only functions:importer"
+    "deploy:importer": "tsc && firebase deploy --only functions:importer",
+    "deploy:all": "tsc && firebase deploy --only functions:importer,functions:scheduledQuery"
   },
   "files": [
     "lib"
