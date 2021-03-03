@@ -1,24 +1,20 @@
 import {Logger} from '@mashi-mashi/fff/lib';
 import * as fs from 'fs';
 import * as yaml from 'js-yaml';
-import {BigQueryApi} from '../infrastructures/bigquery-api';
 import {PubsubApi} from '../infrastructures/pubsub-api';
 
 const DIR_NAME = './templates/';
 
 const logger = Logger.create('[QueryExporterService]');
 
-export class QueryService {
-  private bq: BigQueryApi;
+export class MessagingService {
   private pubsub: PubsubApi;
-  private constructor({bq, pubsub}: {bq: BigQueryApi; pubsub: PubsubApi}) {
-    this.bq = bq;
+  private constructor({pubsub}: {pubsub: PubsubApi}) {
     this.pubsub = pubsub;
   }
 
   public static initialize = async (credentials?: {projectId: string; private_key: string; client_email: string}) => {
-    return new QueryService({
-      bq: new BigQueryApi(credentials),
+    return new MessagingService({
       pubsub: new PubsubApi(),
     });
   };
@@ -28,15 +24,15 @@ export class QueryService {
     logger.log('files', files);
 
     await Promise.all(
-      this.selectYamlFile(files).map(async file => {
+      this.validateYamlFile(files).map(async file => {
         try {
           const readYaml = this.loadYamlFile(DIR_NAME + '/' + file);
           const {sql, spreadsheetId, sheetId, skip, description} = readYaml;
 
           if (!sql || !spreadsheetId || !sheetId || skip) return;
-          await this.pubsub.publishJSON({
+          await this.publishJSON({
             topicName: 'import-bigquery-values',
-            json: {
+            message: {
               sql,
               spreadsheetId,
               sheetId,
@@ -53,6 +49,10 @@ export class QueryService {
     logger.log(`All exports have been completed.`);
   };
 
+  private publishJSON = async ({topicName, message}: {topicName: string; message: object}) => {
+    return await this.pubsub.publishJSON({topicName, json: message});
+  };
+
   private loadYamlFile = (filename: string) => {
     const yamlText = fs.readFileSync(filename, {encoding: 'utf8'});
     return yaml.load(yamlText) as {
@@ -64,7 +64,7 @@ export class QueryService {
     };
   };
 
-  private selectYamlFile = (files: string[]) => {
+  private validateYamlFile = (files: string[]) => {
     // スペース以外の文字で始まって「.yaml」「.yml」で終わる文字(大文字・小文字を区別しない[i])
     const reg = new RegExp('([^s]+(\\.(yaml|yml))$)', 'i');
     return files.filter(file => reg.test(file));
