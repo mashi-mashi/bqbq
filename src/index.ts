@@ -4,7 +4,6 @@ import * as functions from 'firebase-functions';
 import {EventContext} from 'firebase-functions';
 import {Message} from 'firebase-functions/lib/providers/pubsub';
 import {PubsubClient} from './infrastructures/pubsub-client';
-import {MessagingService} from './service/messaging-service';
 import {ExportSpreadsheetUsecase} from './usecases/export-spreadsheet-usecase';
 import {LoadConfigUsecase} from './usecases/load-config-usecase';
 
