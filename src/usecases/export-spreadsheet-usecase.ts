@@ -1,27 +1,28 @@
 import {Logger} from '@mashi-mashi/fff/lib/logger/logger';
-import {google, sheets_v4, Auth} from 'googleapis';
-import {BigQueryApi} from '../infrastructures/bigquery-api';
+import {Auth, sheets_v4, google} from 'googleapis';
+import {BigQueryClient} from '../infrastructures/bigquery-client';
 
-export class ImportService {
+export class ExportSpreadsheetUsecase {
   private auth: Auth.JWT;
   private sheet: sheets_v4.Sheets;
-  private logger = Logger.create('[ImportService]');
-
-  private constructor(auth: Auth.JWT) {
-    this.auth = auth;
-    this.sheet = google.sheets('v4');
-  }
+  private logger = Logger.create('ExportSpreadsheetUsecase');
+  private bigquery = new BigQueryClient();
 
   public static initialize = async (credentials?: {projectId: string; private_key: string; client_email: string}) => {
     const auth = (await google.auth.getClient({
       credentials,
       scopes: ['https://www.googleapis.com/auth/spreadsheets'],
     })) as Auth.JWT;
-    return new ImportService(auth);
+    return new ExportSpreadsheetUsecase(auth);
   };
 
-  public import = async ({sql, spreadsheetId, sheetId}: {spreadsheetId: string; sheetId: string; sql: string}) => {
-    const values = await new BigQueryApi().executeQuery(sql);
+  private constructor(auth: Auth.JWT) {
+    this.auth = auth;
+    this.sheet = google.sheets('v4');
+  }
+
+  public execute = async ({sql, spreadsheetId, sheetId}: {spreadsheetId: string; sheetId: string; sql: string}) => {
+    const values = await this.bigquery.executeQuery(sql);
     this.logger.log(`start exporting to GSS, ${spreadsheetId + ':' + sheetId}`);
     await this.replaceSheet(spreadsheetId, sheetId, values);
     this.logger.log(`finish exporting to GSS, ${spreadsheetId + ':' + sheetId}`);

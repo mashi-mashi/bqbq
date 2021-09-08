@@ -1,10 +1,11 @@
-import {BigQuery} from '@google-cloud/bigquery';
+import {BigQuery, InsertRowsResponse} from '@google-cloud/bigquery';
 import {Logger} from '@mashi-mashi/fff/lib/logger/logger';
 import {HttpError, HttpStatusCode} from '@mashi-mashi/fff/lib/api/http-error';
+import {chunk, deepDeleteUndefined} from '../utils/object-utils';
 
 const MAXIMUM_EXECUTION_AMOUNT_YEN = 5;
 
-export class BigQueryApi {
+export class BigQueryClient {
   private client: BigQuery;
   private logger = Logger.create('BigQuery');
 
@@ -48,5 +49,45 @@ export class BigQueryApi {
     const bytes: number = minBytesBilled > Number(bytesProcessed) ? minBytesBilled : Number(bytesProcessed);
     const bytesAsTeraBytes: number = bytes / 1024 / 1024 / 1024 / 1024;
     return (bytesAsTeraBytes / 1) /* TB */ * 5 /* $ */ * 113; /* 円(ドル円相場) */
+  };
+
+  public insertRawJsons = async (
+    datasetId: string,
+    tableId: string,
+    rows: {
+      insertId: string | undefined;
+      json: any;
+    }[]
+  ) => {
+    if (!rows.length) {
+      this.logger.log('no data.');
+      return {results: [], errors: []};
+    }
+
+    const results: InsertRowsResponse[] = [];
+    const errors: any[] = [];
+    for (const rows_part of chunk(rows, 1000)) {
+      const result = await this.client
+        .dataset(datasetId)
+        .table(tableId)
+        .insert(rows_part.map(deepDeleteUndefined), {raw: true})
+        .catch(e => {
+          if (e.errors?.length) {
+            e.errors.forEach((error: any) => {
+              // this.logger.error(`bigquery error tableId: ${datasetId}.${tableId}`, error);
+              errors.push(...e.errors.flat());
+            });
+          }
+        });
+      this.logger.log(
+        `insert to bigquery. tableId: ${datasetId}.${tableId} count: ${rows_part.length} / ${rows.length}`
+      );
+
+      result && results.push(result);
+    }
+
+    this.logger.log(`insert process completed. tableId: ${datasetId}.${tableId} count: ${rows.length}`);
+
+    return {results, errors: errors.flat()};
   };
 }

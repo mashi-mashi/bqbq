@@ -1,21 +1,21 @@
 import {Logger} from '@mashi-mashi/fff/lib/logger/logger';
 import * as fs from 'fs';
 import * as yaml from 'js-yaml';
-import {PubsubApi} from '../infrastructures/pubsub-api';
+import {PubsubClient} from '../infrastructures/pubsub-client';
 
 const DIR_NAME = './templates/';
 
 const logger = Logger.create('[QueryExporterService]');
 
 export class MessagingService {
-  private pubsub: PubsubApi;
-  private constructor({pubsub}: {pubsub: PubsubApi}) {
+  private pubsub: PubsubClient;
+  private constructor({pubsub}: {pubsub: PubsubClient}) {
     this.pubsub = pubsub;
   }
 
   public static initialize = async (credentials?: {projectId: string; private_key: string; client_email: string}) => {
     return new MessagingService({
-      pubsub: new PubsubApi(),
+      pubsub: new PubsubClient(),
     });
   };
 
