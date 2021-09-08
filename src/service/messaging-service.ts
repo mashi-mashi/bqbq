@@ -1,4 +1,4 @@
-import {Logger} from '@mashi-mashi/fff/lib';
+import {Logger} from '@mashi-mashi/fff/lib/logger/logger';
 import * as fs from 'fs';
 import * as yaml from 'js-yaml';
 import {PubsubApi} from '../infrastructures/pubsub-api';
@@ -41,7 +41,7 @@ export class MessagingService {
             },
           });
         } catch (e) {
-          logger.error('Failed to export sheet', e?.message);
+          logger.error(`Failed to export sheet.`, e);
         }
       })
     );

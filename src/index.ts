@@ -1,4 +1,4 @@
-import {Logger} from '@mashi-mashi/fff/lib';
+import {Logger} from '@mashi-mashi/fff/lib/logger/logger';
 import * as dotenv from 'dotenv';
 import * as functions from 'firebase-functions';
 import {EventContext} from 'firebase-functions';

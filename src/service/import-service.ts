@@ -1,11 +1,11 @@
-import {Logger} from '@mashi-mashi/fff/lib';
+import {Logger} from '@mashi-mashi/fff/lib/logger/logger';
 import {google, sheets_v4, Auth} from 'googleapis';
 import {BigQueryApi} from '../infrastructures/bigquery-api';
 
-const logger = Logger.create('[ImportService]');
 export class ImportService {
   private auth: Auth.JWT;
   private sheet: sheets_v4.Sheets;
+  private logger = Logger.create('[ImportService]');
 
   private constructor(auth: Auth.JWT) {
     this.auth = auth;
@@ -22,9 +22,9 @@ export class ImportService {
 
   public import = async ({sql, spreadsheetId, sheetId}: {spreadsheetId: string; sheetId: string; sql: string}) => {
     const values = await new BigQueryApi().executeQuery(sql);
-    logger.log(`start exporting to GSS, ${spreadsheetId + ':' + sheetId}`);
+    this.logger.log(`start exporting to GSS, ${spreadsheetId + ':' + sheetId}`);
     await this.replaceSheet(spreadsheetId, sheetId, values);
-    logger.log(`finish exporting to GSS, ${spreadsheetId + ':' + sheetId}`);
+    this.logger.log(`finish exporting to GSS, ${spreadsheetId + ':' + sheetId}`);
   };
 
   private clearSheet = async (spreadsheetId: string, sheetId: string) => {

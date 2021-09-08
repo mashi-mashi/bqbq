@@ -1,12 +1,13 @@
 import {BigQuery} from '@google-cloud/bigquery';
-import {HttpError, HttpStatusCode, Logger} from '@mashi-mashi/fff/lib';
-
-const logger = Logger.create('[GcpBigQuery]');
+import {Logger} from '@mashi-mashi/fff/lib/logger/logger';
+import {HttpError, HttpStatusCode} from '@mashi-mashi/fff/lib/api/http-error';
 
 const MAXIMUM_EXECUTION_AMOUNT_YEN = 5;
 
 export class BigQueryApi {
   private client: BigQuery;
+  private logger = Logger.create('BigQuery');
+
   constructor(credentials?: {projectId: string; private_key: string; client_email: string}) {
     this.client = new BigQuery(
       credentials
@@ -26,7 +27,7 @@ export class BigQueryApi {
   public executeQuery = async <T>(sql: string, params?: {[param: string]: any}): Promise<T[]> => {
     const [, res] = await this.client.createQueryJob({query: sql, dryRun: true});
     const yen = this.billedAsYen(res.statistics?.totalBytesProcessed);
-    logger.log('見積もり(円):', yen);
+    this.logger.log('見積もり(円):', yen);
 
     // 見積もり失敗か5円以上かかるならエラー
     if (!yen || yen > MAXIMUM_EXECUTION_AMOUNT_YEN) {
@@ -34,7 +35,7 @@ export class BigQueryApi {
     }
 
     const result = await this.client.query({query: sql, params}).catch(e => {
-      logger.error('failed to execute query', e);
+      this.logger.error('failed to execute query', e);
       throw new HttpError(HttpStatusCode.INTERNAL_SERVER_ERROR, 'failed-to-execute-query');
     });
 
